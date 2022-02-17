@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t npnkha/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true npnkha/react-test npm test
+
+after_success:
+  - docker build -t npnkha/multi-client ./client
+  - docker build -t npnkha/multi-nginx ./nginx
+  - docker build -t npnkha/multi-server ./server
+  - docker build -t npnkha/multi-worker ./worker
+
+  #Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take images and push to docker hub
+  - docker push npnkha/multi-client
+  - docker push npnkha/multi-nginx
+  - docker push npnkha/multi-server
+  - docker push npnkha/multi-worker
